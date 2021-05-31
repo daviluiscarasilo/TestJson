@@ -1,0 +1,3322 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Conecttec de Captura de Pagamentos",
+    "description": "O objetivo desta documentação é servir de guia para o desenvolvedor sobre como integrar com a API da ConectTec, descrevendo os métodos e callbacks disponíveis com exemplos de objetos como requisição, resposta e dos verbos http utilizados.",
+    "contact": {
+      "name": "Desenvolvimento Conecttec",
+      "url": "https://conecttec.com.br/",
+      "email": "contato@conecttec.br"
+    },
+    "version": "1.2.4-oas3"
+  },
+  "servers": [
+    {
+      "url": "https://conecttec.com.br/",
+      "description": "ConectTec URL host."
+    }
+  ],
+  "tags": [
+    {
+      "name": "Setup",
+      "description": "Cadastro de entrypoint para funções de callback."
+    },
+    {
+      "name": "API - CloudPumpControl - Server",
+      "description": "Operações de controle e gerenciamento de abastecimento."
+    },
+    {
+      "name": "API - DeliveryInformations",
+      "description": "Callbacks de informações de abastecimentos."
+    },
+    {
+      "name": "API - StockInformations",
+      "description": "Callbacks para controle de estoque."
+    },
+    {
+      "name": "API - ECR Delivery Reconciliation",
+      "description": "Operações para gerenciamento de reconciliações sem status."
+    },
+    {
+      "name": "API - ECR Payment Reconciliation",
+      "description": "Operações para gerenciamento de reconciliações com status      "
+    }
+  ],
+  "paths": {
+    "/Provider/Callback": {
+      "post": {
+        "tags": [
+          "Setup"
+        ],
+        "summary": "Cadastro/Atualização de entrypoint do provider para receber informações de callback.",
+        "description": "Método para cadastrar ou atualizar o entrypoint(URL) do provider que deve receber callbacks.",
+        "operationId": "ProviderEntryPoint",
+        "requestBody": {
+          "description": "Objeto de requisição para o cadastro de um entrypoint.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderEntryPointRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entrypoint atualizado com sucesso!"
+          },
+          "201": {
+            "description": "Entrypoint cadastrado com sucesso!"
+          },
+          "400": {
+            "description": "Erro no cadastro do entrypoint do provider. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.                "
+          },
+          "500": {
+            "description": "Erro no cadastro do entrypoint do provider."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/Reserve": {
+      "post": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Solicitação de reserva de um Fuel Point.",
+        "description": "Realizar a solicitação de reserva de um Fuel Point (Posição de Abastecimento). Este é o primeiro passo para realizar um abastecimento. Este passo deve ser executado antes do Delivery/Authorize.",
+        "operationId": "DeliveryReserve",
+        "requestBody": {
+          "description": "Objeto de requisição para reservar um Fuel Point.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryReserveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Solicitação de reserva criada com sucesso! Aguardar retorno do Provider/FulPointStatusCallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryReserveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro no processamento de reserva do Fuel Point (Posição de Abastecimento). Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.   "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro no processamento de reserva do Fuel Point (Posição de Abastecimento)."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/Authorize": {
+      "post": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Solicitação de autorização para reserva de um Fuel Point.",
+        "description": "Autoriza a posição de abastecimento previamente reservada com os parâmetros e o tempo especificados na mensagem. Este é o segundo passo para realizar um abastecimento. Este passo deve ser executado após o Delivery/Reserve.",
+        "operationId": "DeliveryAuthorize",
+        "requestBody": {
+          "description": "Objeto de requisição para autorização de reserva em um Fuel Point (Posição de Abastecimento).      ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryAuthorizeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitação para autorização da reserva criada com sucesso! Aguardar retorno do Provider/FulPointStatusCallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryAuthorizeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro no processamento de autorização do Fuel Point. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino."
+          },
+          "404": {},
+          "500": {
+            "description": "Erro no processamento de autorização do Fuel Point."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/AuthorizeByFuelType": {
+      "post": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Solicitação de autorização para reserva de um Fuel Point baseado no tipo de combustível.",
+        "description": "Autoriza a posição de abastecimento previamente reservada com os parâmetros e o tempo especificados na mensagem. Este é o segundo passo para realizar um abastecimento. Este passo deve ser executado após o Delivery/Reserve.",
+        "operationId": "DeliveryAuthorizeByFuelType",
+        "requestBody": {
+          "description": "Objeto de requisição para autorização de reserva em um Fuel Point (Posição de Abastecimento).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryAuthorizeByFuelTypeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitação para autorização da reserva criada com sucesso! Aguardar retorno do Provider/FulPointStatusCallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryAuthorizeByFuelTypeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro no processamento de autorização do Fuel Point. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino. "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro no processamento de autorização do Fuel Point."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/AuthorizeWithoutReserve": {
+      "post": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Solicitação de autorização para um Fuel Point sem passar o reserva.",
+        "description": "Autoriza a posição de abastecimento com os parâmetros e o tempo especificados na mensagem sem a necessidade de fazer uma reserva anteriormente.",
+        "operationId": "DeliveryAuthorizeWithoutReserve",
+        "requestBody": {
+          "description": "Objeto de requisição para autorização de reserva em um Fuel Point (Posição de Abastecimento).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryAuthorizeWithoutReserveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Solicitação para autorização criada com sucesso! Aguardar retorno do Provider/FulPointStatusCallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryAuthorizeWithoutReserveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro no processamento de autorização do Fuel Point. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.  "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro no processamento de autorização do Fuel Point."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/Stop": {
+      "post": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Paralização ou cancelamento de um abastecimento.",
+        "description": "Realizar a solicitação de paralização de abastecimento na bomba ou solicitar cancelamento de uma reserva/autenticação se a entrega não tiver sido iniciada.",
+        "operationId": "DeliveryStop",
+        "requestBody": {
+          "description": "Objeto de requisição para realizar um stop no Fuel Point (Posição de Abastecimento).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryStopRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitação de paralização ou cancelamento da reserva criada com sucesso! Aguardar retorno do Provider/FulPointStatusCallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryStopResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro no processamento de paralização do Fuel Point. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.  "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro no processamento de paralização do Fuel Point."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/TransactionStatus": {
+      "post": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Sinalização status de abastecimento.",
+        "description": "Realizar a sinalização status de abastecimento, se o mesmo já foi capturado, pago, agendado, contestado ou até mesmo antecipado.",
+        "operationId": "DeliveryTransactionStatus",
+        "requestBody": {
+          "description": "Objeto de requisição para sinalização status de abastecimento.      ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryTransactionStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Processo de sinalização status de abastecimento realizado com sucesso!."
+          },
+          "400": {
+            "description": "Erro no processamento de sinalização status de abastecimento. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.    "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro no processamento de sinalização status de abastecimento."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/EcrDeliveryReconciliation/ByAuthId": {
+      "get": {
+        "tags": [
+          "API - ECR Delivery Reconciliation"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar abastecimento considerando hash/código único de identificação da autorização.",
+        "operationId": "EcrDeliveryReconciliationByAuthId",
+        "parameters": [
+          {
+            "name": "authId",
+            "in": "query",
+            "description": "Hash/Código único de identificação da autorização. ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stationId",
+            "in": "query",
+            "description": "Código único de identificação do posto.  ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Abastecimento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcrDeliveryReconciliationByAuthIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.   "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "EcrKeyAuthorization": []
+          },
+          {
+            "EcrStationKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/EcrDeliveryReconciliation/LastDelivery": {
+      "get": {
+        "tags": [
+          "API - ECR Delivery Reconciliation"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar ultimo abastecimento do posto considerando  código único de identificação do posto.",
+        "operationId": "EcrDeliveryReconciliationLastDelivery",
+        "parameters": [
+          {
+            "name": "stationId",
+            "in": "query",
+            "description": "Código único de identificação do posto.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fuelpointNumber",
+            "in": "query",
+            "description": "Código único de identificação do Fuel Point (Posição de Abastecimento)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Abastecimento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcrDeliveryReconciliationLastDeliveryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.  "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "EcrKeyAuthorization": []
+          },
+          {
+            "EcrStationKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/EcrDeliveryReconciliation/ByFuelPointNumber": {
+      "get": {
+        "tags": [
+          "API - ECR Delivery Reconciliation"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar abastecimentos considerando  código único de identificação do Fuel Point (Posição de Abastecimento).",
+        "operationId": "EcrDeliveryReconciliationFuelPointNumber",
+        "parameters": [
+          {
+            "name": "stationId",
+            "in": "query",
+            "description": "Código único de identificação do posto.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fuelpointNumber",
+            "in": "query",
+            "description": "Código único de identificação do Fuel Point (Posição de Abastecimento)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Data referente ao inicio do período das realizações dos abastecimentos.  ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "format": "DateTime",
+              "example": "2020-12-10T22:00:00"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Data referente ao fim do período das realizações dos abastecimentos.  ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "format": "DateTime",
+              "example": "2020-12-10T22:00:00"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de abastecimentos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcrDeliveryReconciliationFuelPointNumberResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.  "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "EcrKeyAuthorization": []
+          },
+          {
+            "EcrStationKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/EcrPaymentReconciliation/ByAuthId": {
+      "get": {
+        "tags": [
+          "API - ECR Payment Reconciliation"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar abastecimento considerando hash/código único de identificação da autorização.",
+        "operationId": "EcrPaymentReconciliationByAuthId",
+        "parameters": [
+          {
+            "name": "authId",
+            "in": "query",
+            "description": "Hash/Código único de identificação da autorização. ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stationId",
+            "in": "query",
+            "description": "Código único de identificação do posto.  ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Abastecimento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcrPaymentReconciliationByAuthIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.      "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "EcrKeyAuthorization": []
+          },
+          {
+            "EcrStationKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/EcrPaymentReconciliation/LastDelivery": {
+      "get": {
+        "tags": [
+          "API - ECR Payment Reconciliation"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar ultimo abastecimento do posto considerando  código único de identificação do posto.",
+        "operationId": "EcrPaymentReconciliationLastDelivery",
+        "parameters": [
+          {
+            "name": "stationId",
+            "in": "query",
+            "description": "Código único de identificação do posto.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fuelpointNumber",
+            "in": "query",
+            "description": "Código único de identificação do Fuel Point (Posição de Abastecimento)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Abastecimento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcrPaymentReconciliationLastDeliveryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.    "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "EcrKeyAuthorization": []
+          },
+          {
+            "EcrStationKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/EcrPaymentReconciliation/ByFuelPointNumber": {
+      "get": {
+        "tags": [
+          "API - ECR Payment Reconciliation"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar abastecimentos considerando  código único de identificação do Fuel Point (Posição de Abastecimento).",
+        "operationId": "EcrPaymentReconciliationFuelPointNumber",
+        "parameters": [
+          {
+            "name": "stationId",
+            "in": "query",
+            "description": "Código único de identificação do posto.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fuelpointNumber",
+            "in": "query",
+            "description": "Código único de identificação do Fuel Point (Posição de Abastecimento)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Data referente ao inicio do período das realizações dos abastecimentos.  ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "format": "DateTime",
+              "example": "2020-12-10T22:00:00"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Data referente ao fim do período das realizações dos abastecimentos.  ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "format": "DateTime",
+              "example": "2020-12-10T22:00:00"
+            }
+          },
+          {
+            "name": "transactionStatus",
+            "in": "query",
+            "description": "Tipo do status da transação. - captured  = 0 - paid  = 1                 - scheduled = 2  - contested  = 3 - anticipated  = 4",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "example": 0,
+              "enum": [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de abastecimentos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcrPaymentReconciliationFuelPointNumberResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.     "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "EcrKeyAuthorization": []
+          },
+          {
+            "EcrStationKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/EcrPaymentReconciliation/InvoiceStationInformation": {
+      "get": {
+        "tags": [
+          "API - ECR Payment Reconciliation"
+        ],
+        "summary": "Informações para emissão de NFE ",
+        "description": "Consultar as informações para emissão de NFE com base no código de autorização",
+        "operationId": "EcrPaymentReconciliationInvoiceStationInformation",
+        "parameters": [
+          {
+            "name": "authId",
+            "in": "query",
+            "description": "Hash/Código único de identificação da autorização. ",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de abastecimentos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EcrPaymentReconciliationInvoiceStationInformationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação das informações. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.  "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação das informações."
+          }
+        },
+        "security": [
+          {
+            "EcrKeyAuthorization": []
+          },
+          {
+            "EcrStationKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/EcrPaymentReconciliation/InvoiceUpload": {
+      "post": {
+        "tags": [
+          "API - ECR Payment Reconciliation"
+        ],
+        "summary": "Upload de Nota Fiscal",
+        "description": "Possibilitar que o estabelecimento realize o envio do arquivo XML de nota fiscal emitida para\n um cliente que utiliza o sistema de recolha de notas.",
+        "operationId": "EcrPaymentReconciliationInvoiceUpload",
+        "requestBody": {
+          "description": "Objeto de requisição para envio de nfe.               ",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EcrPaymentReconciliationInvoiceUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nfe enviada com sucesso!"
+          },
+          "400": {
+            "description": "Erro no envio da nfe. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino."
+          },
+          "404": {},
+          "500": {
+            "description": "Erro no envio da nfe."
+          }
+        },
+        "security": [
+          {
+            "EcrKeyAuthorization": []
+          },
+          {
+            "EcrStationKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/ForecourtMap/ById/{stationId}": {
+      "get": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Recupera mapa de pista baseado no StationId informado.",
+        "description": "Recupera mapa de pista baseado no StationId informado.",
+        "operationId": "GetForecourtMapById",
+        "parameters": [
+          {
+            "name": "stationId",
+            "in": "path",
+            "description": "Código único de identificação do posto.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fuelpointNumber",
+            "in": "query",
+            "description": "Código único de identificação do posto.",
+            "required": false,
+            "allowEmptyValue": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecourtMapByIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação do mapa de pista. Entrada inválida ou objeto inválido.                   "
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino. "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação do mapa de pista.             "
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/ForecourtMap/ByRangeId": {
+      "get": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Recupera mapa de pista dos postos baseado em um range de StationId.",
+        "description": "Recupera mapa de pista dos postos baseado em um range de StationId.",
+        "operationId": "GetForecourtMapByRangeId",
+        "parameters": [
+          {
+            "name": "startStationId",
+            "in": "query",
+            "description": "Código único de identificação do posto. Será utilizado como valor inicial do range de ids.  ",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "endStationId",
+            "in": "query",
+            "description": "Código único de identificação do posto. Será utilizado como valor final do range de ids.  ",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecourtMapByRangeIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação do mapas de pista. Entrada inválida ou objeto inválido.                   "
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino. "
+          },
+          "404": {},
+          "500": {
+            "description": "Erro na recuperação do mapas de pista.  "
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/ByStationId": {
+      "get": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar abastecimentos considerando identificação do posto, e data da operação.",
+        "operationId": "DeliveryByStationId",
+        "parameters": [
+          {
+            "name": "stationId",
+            "in": "query",
+            "description": "Código único de identificação do posto.  ",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Data referente ao dia da realização dos abastecimentos (Horas e minutos não irão ser consideradas).  ",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "format": "DateTime",
+              "example": "2020-12-10T22:00:00"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de abastecimentos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryByStationIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino. "
+          },
+          "404": {
+            "description": "Nenhum abastecimento encontrado para o StationId {0} com data{1}     "
+          },
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/ByAuthId": {
+      "get": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar abastecimentos considerando hash/código único de identificação da autorização.",
+        "operationId": "DeliveryByAuthId",
+        "parameters": [
+          {
+            "name": "authId",
+            "in": "query",
+            "description": "Hash/Código único de identificação da autorização. ",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de abastecimentos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryByAuthIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.          "
+          },
+          "404": {
+            "description": "Nenhum abastecimento encontrado para o AuthId {0}                 "
+          },
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Delivery/ByProviderId": {
+      "get": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "summary": "Recuperar abastecimentos.",
+        "description": "Recuperar abastecimentos considerando hash/código único de identificação da autorização.",
+        "operationId": "DeliveryByProviderId",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Data referente ao dia da realização dos abastecimentos (Horas e minutos não irão ser consideradas).  ",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "format": "DateTime",
+              "example": "2020-12-10T22:00:00"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de abastecimentos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryByProviderIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro na recuperação dos abastecimentos. Entrada inválida ou objeto inválido."
+          },
+          "401": {
+            "description": "A solicitação não foi aplicada porque não possui credenciais de autenticação válidas para o recurso de destino.   "
+          },
+          "404": {
+            "description": "Nenhum abastecimento encontrado para o ProviderId {0} com data{1}"
+          },
+          "500": {
+            "description": "Erro na recuperação dos abastecimentos."
+          }
+        },
+        "security": [
+          {
+            "SecretKeyAuthorization": []
+          }
+        ]
+      }
+    },
+    "/Callbacks": {
+      "get": {
+        "tags": [
+          "API - CloudPumpControl - Server"
+        ],
+        "description": "Rotas para callbacks, o prefixo {entryPointProvider}, utilizado nas rotas de callbacks, será substituido pelo entrypoint cadastrado na rota /Provider/Callback no atributo \"entryPointProvider\", no caso de não ter sido realizado o cadastro, não será enviado callback algum.",
+        "responses": {
+          "default": {}
+        },
+        "callbacks": {
+          "FuelPointStatus": {
+            "{entryPointProvider}/FuelPoint/Status": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/FuelPointStatusCallback"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "Delivery": {
+            "{entryPointProvider}/FuelPoint/Delivery": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/DeliveryCallbackCPC"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "CardReader": {
+            "{entryPointProvider}/FuelPoint/CardReader": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/CardReaderCallback"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "TagReader": {
+            "{entryPointProvider}/FuelPoint/TagReader": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/TagReaderCallback"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Callback": {
+      "get": {
+        "tags": [
+          "API - DeliveryInformations"
+        ],
+        "description": "Rotas para callbacks, o prefixo {entryPointProvider}, utilizado nas rotas de callbacks, será substituido pelo entrypoint cadastrado na rota /Provider/Callback no atributo \"entryPointProvider\", no caso de não ter sido realizado o cadastro, não será enviado callback algum.",
+        "responses": {
+          "default": {}
+        },
+        "callbacks": {
+          "Delivery": {
+            "{entryPointProvider}/FuelPoint/DeliveryWithStation": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/DeliveryCallback"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "TankEventWithStation": {
+            "{entryPointProvider}/Tank/TankEventWithStation": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/TankEventWithStationCallback"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/TankCallbacks": {
+      "get": {
+        "tags": [
+          "API - StockInformations"
+        ],
+        "description": "Rotas para callbacks, o prefixo {entryPointProvider}, utilizado nas rotas de callbacks, será substituido pelo entrypoint cadastrado na rota /Provider/Callback no atributo \"entryPointProvider\", no caso de não ter sido realizado o cadastro, não será enviado callback algum.",
+        "responses": {
+          "default": {}
+        },
+        "callbacks": {
+          "TankDelivery": {
+            "{entryPointProvider}/Tank/Delivery": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/TankDeliveryCallback"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "TankEvent": {
+            "{entryPointProvider}/Tank/Event": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/TankEventCallback"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "SensorEvent": {
+            "{entryPointProvider}/Tank/SensorEvent": {
+              "post": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/SensorEventCallback"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DeliveryReserveRequest": {
+        "required": [
+          "fuelPointNumber",
+          "providerId",
+          "reserveTimeOut",
+          "stationId"
+        ],
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Número da posição de abastecimento.",
+            "example": 3
+          },
+          "providerId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação do provider criado pela Conecttec.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "reserveTimeOut": {
+            "maximum": 120,
+            "minimum": 1,
+            "type": "integer",
+            "format": "Tempo de reserva em segundos. A reserva é específica para um Fuel Point (Posição de Abastecimento). Ao final do tempo determinado é gerado um novo retorno para o callback FuelPoint/Status onde a propriedade reason é igual a reserveTimedout. O abastecimento atual será finalizado e o Fuel Point será liberado para outras utilizações.",
+            "example": 42
+          }
+        }
+      },
+      "DeliveryReserveResponse": {
+        "type": "object",
+        "properties": {
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "providerId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação do provider criado pela Conecttec.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "fuelPoints": {
+            "$ref": "#/components/schemas/FuelPointForReserve"
+          }
+        }
+      },
+      "DeliveryAuthorizeRequest": {
+        "required": [
+          "authTimeOut",
+          "hoseNumber",
+          "limitType",
+          "limitValue",
+          "price",
+          "reserveId",
+          "updateRate"
+        ],
+        "type": "object",
+        "properties": {
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId. Se o identificador informado não existir, ele não autoriza nem modifica o status.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Posição do Hose (Mangueira/Bico) no Fuel Point (Posição de Abastecimento).",
+            "example": 1
+          },
+          "limitType": {
+            "maxLength": 1,
+            "minLength": 1,
+            "type": "string",
+            "format": "Tipo de limite do abastecimento - Valor($) ou Volume(V).",
+            "example": "$"
+          },
+          "limitValue": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Valor do limite em litros caso o tipo de limite escolhido seja Volume ou em reais caso o tipo de limite escolhido seja valor.",
+            "example": 10
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário para ser usado pelo abastecimento autorizado.",
+            "example": 4.745
+          },
+          "updateRate": {
+            "maximum": 60,
+            "minimum": 2,
+            "type": "integer",
+            "format": "Indica a taxa de envio do Fuel Point (Posição de Abastecimento) em execução total em segundos. É utilizado para envio do Provider/FuelPointStatusCallback. Se zero ou não especificado, o Provider/FuelPointStatusCallback não será enviado.",
+            "example": 2
+          },
+          "authTimeOut": {
+            "maximum": 200,
+            "minimum": 1,
+            "type": "integer",
+            "format": "Tempo de autorização em segundos. A autorização é específica para um Fuel Point (Posição de Abastecimento). Ao final do tempo determinado, a autenticação expira e é gerado um novo retorno para o callback FuelPoint/Status onde a propriedade reason é igual a authTimedout. O abastecimento atual será cancelado e o Fuel Point será liberado para outras utilizações.",
+            "example": 60
+          }
+        }
+      },
+      "DeliveryAuthorizeByFuelTypeRequest": {
+        "required": [
+          "authTimeOut",
+          "hoseNumber",
+          "limitType",
+          "limitValue",
+          "price",
+          "reserveId",
+          "updateRate"
+        ],
+        "type": "object",
+        "properties": {
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId. Se o identificador informado não existir, ele não autoriza nem modifica o status.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "fuelType": {
+            "type": "integer",
+            "description": "- outra = 0 - etanol = 1 - etanolAditivada = 2 - etanolPremium = 3 - etanolPremiumAditivada = 4 - gasolina = 5 - gasolinaAditivada = 6 - gasolinaPremium = 7 - gasolinaPremiumAditivada = 8 - dieselS10 = 9 - dieselS50 = 10 - dieselS500 = 11 - dieselS1200 = 12 - dieselMaritimo = 13 - querosene = 14 - gnv = 15 - arla = 16",
+            "format": "Tipo de combustivel baseado no código do enum.",
+            "example": 1,
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          },
+          "limitType": {
+            "maxLength": 1,
+            "minLength": 1,
+            "type": "string",
+            "format": "Tipo de limite do abastecimento - Valor($) ou Volume(V).",
+            "example": "$"
+          },
+          "limitValue": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Valor do limite em litros caso o tipo de limite escolhido seja Volume ou em reais caso o tipo de limite escolhido seja valor.",
+            "example": 10
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário para ser usado pelo abastecimento autorizado.",
+            "example": 4.745
+          },
+          "updateRate": {
+            "maximum": 60,
+            "minimum": 2,
+            "type": "integer",
+            "format": "Indica a taxa de envio do Fuel Point (Posição de Abastecimento) em execução total em segundos. É utilizado para envio do Provider/FuelPointStatusCallback. Se zero ou não especificado, o Provider/FuelPointStatusCallback não será enviado.",
+            "example": 2
+          },
+          "authTimeOut": {
+            "maximum": 200,
+            "minimum": 1,
+            "type": "integer",
+            "format": "Tempo de autorização em segundos. A autorização é específica para um Fuel Point (Posição de Abastecimento). Ao final do tempo determinado, a autenticação expira e é gerado um novo retorno para o callback FuelPoint/Status onde a propriedade reason é igual a authTimedout. O abastecimento atual será cancelado e o Fuel Point será liberado para outras utilizações.",
+            "example": 60
+          }
+        }
+      },
+      "DeliveryAuthorizeWithoutReserveRequest": {
+        "required": [
+          "authTimeOut",
+          "hoseNumber",
+          "limitType",
+          "limitValue",
+          "price",
+          "updateRate"
+        ],
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Número da posição de abastecimento.",
+            "example": 3
+          },
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Posição do Hose (Mangueira/Bico) no Fuel Point (Posição de Abastecimento).",
+            "example": 1
+          },
+          "limitType": {
+            "maxLength": 1,
+            "minLength": 1,
+            "type": "string",
+            "format": "Tipo de limite do abastecimento - Valor($) ou Volume(V).",
+            "example": "$"
+          },
+          "limitValue": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Valor do limite em litros caso o tipo de limite escolhido seja Volume ou em reais caso o tipo de limite escolhido seja valor.",
+            "example": 10
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário para ser usado pelo abastecimento autorizado.",
+            "example": 4.745
+          },
+          "updateRate": {
+            "maximum": 60,
+            "minimum": 2,
+            "type": "integer",
+            "format": "Indica a taxa de envio do Fuel Point (Posição de Abastecimento) em execução total em segundos. É utilizado para envio do Provider/FuelPointStatusCallback. Se zero ou não especificado, o Provider/FuelPointStatusCallback não será enviado.",
+            "example": 2
+          },
+          "authTimeOut": {
+            "maximum": 200,
+            "minimum": 1,
+            "type": "integer",
+            "format": "Tempo de autorização em segundos. A autorização é específica para um Fuel Point (Posição de Abastecimento). Ao final do tempo determinado, a autenticação expira e é gerado um novo retorno para o callback FuelPoint/Status onde a propriedade reason é igual a authTimedout. O abastecimento atual será cancelado e o Fuel Point será liberado para outras utilizações.",
+            "example": 60
+          }
+        }
+      },
+      "DeliveryAuthorizeResponse": {
+        "required": [
+          "authId",
+          "reserveId"
+        ],
+        "type": "object",
+        "properties": {
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          }
+        }
+      },
+      "DeliveryAuthorizeByFuelTypeResponse": {
+        "required": [
+          "authId",
+          "reserveId"
+        ],
+        "type": "object",
+        "properties": {
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          }
+        }
+      },
+      "DeliveryAuthorizeWithoutReserveResponse": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          }
+        }
+      },
+      "ForecourtMapByIdResponse": {
+        "required": [
+          "authId",
+          "reserveId"
+        ],
+        "type": "object",
+        "properties": {
+          "station": {
+            "$ref": "#/components/schemas/StationCPC"
+          }
+        }
+      },
+      "ForecourtMapByRangeIdResponse": {
+        "required": [
+          "authId",
+          "reserveId"
+        ],
+        "type": "object",
+        "properties": {
+          "stations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StationCPC"
+            }
+          }
+        }
+      },
+      "DeliveryStopRequest": {
+        "required": [
+          "authId",
+          "reserveId"
+        ],
+        "type": "object",
+        "properties": {
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização, enviado na resposta do Delivery/Authorize no campo authId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          }
+        }
+      },
+      "DeliveryStopResponse": {
+        "required": [
+          "cancelId"
+        ],
+        "type": "object",
+        "properties": {
+          "cancelId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação do cancelamento.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          }
+        }
+      },
+      "DeliveryTransactionStatusRequest": {
+        "required": [
+          "authId",
+          "operationalDate",
+          "transactionStatus",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização, enviado na resposta do Delivery/Authorize no campo authId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "customerIdentification": {
+            "type": "string",
+            "format": "Cpf ou Cnpj do cliente que realizou o abastecimento(Campo não obrigatório)",
+            "example": "16531585064"
+          },
+          "providerAutorizationCode": {
+            "type": "integer",
+            "example": 4325
+          },
+          "providerStationID": {
+            "type": "integer",
+            "example": 879
+          },
+          "operationalDate": {
+            "type": "string",
+            "format": "DateTime",
+            "example": "2020-12-10T22:00:00"
+          },
+          "transactionStatus": {
+            "type": "integer",
+            "description": "- captured  = 0 - paid  = 1                 - scheduled = 2  - contested  = 3 - anticipated  = 4",
+            "example": 0,
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "value": {
+            "type": "number",
+            "format": "Valor em reais referente ao pagamento do abastecimento.",
+            "example": 10
+          }
+        }
+      },
+      "EcrDeliveryReconciliationByAuthIdResponse": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/DeliveryReconciliation"
+          }
+        }
+      },
+      "EcrDeliveryReconciliationLastDeliveryResponse": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/DeliveryReconciliation"
+          }
+        }
+      },
+      "EcrDeliveryReconciliationFuelPointNumberResponse": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryReconciliation"
+            }
+          }
+        }
+      },
+      "EcrPaymentReconciliationByAuthIdResponse": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/PaymentReconciliation"
+          }
+        }
+      },
+      "EcrPaymentReconciliationLastDeliveryResponse": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/PaymentReconciliation"
+          }
+        }
+      },
+      "EcrPaymentReconciliationFuelPointNumberResponse": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentReconciliation"
+            }
+          }
+        }
+      },
+      "EcrPaymentReconciliationInvoiceStationInformationResponse": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "cnpj": {
+            "type": "string",
+            "format": "CNPJ do cliente (somente números) para emissão da NFE.\n (14 caracteres máx.)"
+          },
+          "razaoSocial": {
+            "type": "string",
+            "format": "Razão social do cliente para emissão da NFE (80 caracteres máx.)"
+          },
+          "inscricaoEstadual": {
+            "type": "string",
+            "format": "Inscrição estadual do cliente para emissão da NFE (20 caracteres máx.)"
+          },
+          "cfop": {
+            "type": "string",
+            "format": "Lista de CFOPs definidos pelo cliente para emissão da NFE (35 caracteres máx.)"
+          },
+          "endereco": {
+            "$ref": "#/components/schemas/Address"
+          }
+        }
+      },
+      "EcrPaymentReconciliationInvoiceUploadRequest": {
+        "required": [
+          "authId"
+        ],
+        "type": "object",
+        "properties": {
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização, enviado na resposta do Delivery/Authorize no campo authId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "file": {
+            "$ref": "#/components/schemas/File"
+          }
+        }
+      },
+      "DeliveryByStationIdResponse": {
+        "type": "object",
+        "properties": {
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Delivery"
+            }
+          }
+        }
+      },
+      "DeliveryByProviderIdResponse": {
+        "type": "object",
+        "properties": {
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Delivery"
+            }
+          }
+        }
+      },
+      "DeliveryByAuthIdResponse": {
+        "type": "object",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/Delivery"
+          }
+        }
+      },
+      "ProviderEntryPointRequest": {
+        "required": [
+          "entryPointProvider",
+          "providerId"
+        ],
+        "type": "object",
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação do provider criado pela Conecttec.",
+            "example": "1dc237d068b7ca0805084bfcc2e5baf0"
+          },
+          "entryPointProvider": {
+            "type": "string",
+            "format": "URL fornecida para receber callbacks.",
+            "example": "https://urlexemplo.com"
+          }
+        }
+      },
+      "FuelPointStatusCallback": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do Fuel Point (Posição de Abastecimento).",
+            "example": 3
+          },
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do bico.",
+            "example": 2
+          },
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização, enviado na resposta do Delivery/Authorize no campo authId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "fuelPointStatus": {
+            "type": "integer",
+            "description": "- notResponding  = 0 - blocked  = 1                - authorised  = 2 - calling  = 3 - delivering  = 4 - tempStoped  = 5 - deliveryEnd  = 6",
+            "format": "Status do Fuel Point (Posição de Abastecimento), se o mesmo está respondendo, bloqueado, etc...",
+            "example": 0,
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "reason": {
+            "type": "integer",
+            "description": "- reserveSuccessful  = 0 - reserveFailed  = 1 - reserveTimedout  = 2 - reserveCancelled  = 3 - authSucessful  = 4 - authFailed  = 5 - authTimedout  = 6 - authCancelled  = 7 - stopSuccessful  = 8 - stopFailed  = 9 - statusChanged  = 10 - runningTotal  = 11 - reserveInterrupted = 12 - authInterrupted  = 13 - stopInterrupted   = 14",
+            "format": "Razão para o callback. Mensagem de retorno que informa o status. Ex. Reserva realizada com sucesso; Falha na reserva; Falha na autenticação; Alteração de status; Etc...",
+            "example": 1,
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ]
+          },
+          "volume": {
+            "type": "number",
+            "format": "Volume de combustível no tanque em litros na temperatura ambiente. (Informação p/ rotas de ECR -- Emissão nota fiscal) Devido a problemas de truncamento de informação derivado de limitações de hardware presentes nas bombas, nos casos em que  o volume multiplicado pelo preço unitário seja diferente do valor total abastecido em reais, é necessário recalcular o valor do volume do abastecimento, de forma que a multiplicação resultante seja igual ao total informado pela API, o volume recalculado deverá ser informado para o SAT em conjunto com as demais informações necessárias.",
+            "example": 42.5
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário que será usado pelo abastecimento.",
+            "example": 5.487
+          },
+          "total": {
+            "type": "number",
+            "format": "Valor total do abastecimento em reais.",
+            "example": 73.46
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          },
+          "tank": {
+            "$ref": "#/components/schemas/Tank"
+          },
+          "attendant": {
+            "$ref": "#/components/schemas/Attendant"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          }
+        }
+      },
+      "DeliveryCallbackCPC": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do Fuel Point (Posição de Abastecimento).",
+            "example": 3
+          },
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do bico.",
+            "example": 2
+          },
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização, enviado na resposta do Delivery/Authorize no campo authId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "deliveryId": {
+            "type": "string",
+            "format": "Identificador do abastecimento.",
+            "example": "456823"
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do início do abastecimento.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "volume": {
+            "type": "number",
+            "format": "Volume de combustível no tanque em litros na temperatura ambiente. (Informação p/ rotas de ECR -- Emissão nota fiscal) Devido a problemas de truncamento de informação derivado de limitações de hardware presentes nas bombas, nos casos em que  o volume multiplicado pelo preço unitário seja diferente do valor total abastecido em reais, é necessário recalcular o valor do volume do abastecimento, de forma que a multiplicação resultante seja igual ao total informado pela API, o volume recalculado deverá ser informado para o SAT em conjunto com as demais informações necessárias.",
+            "example": 35.95
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário que foi usado pelo abastecimento.",
+            "example": 5.487
+          },
+          "total": {
+            "type": "number",
+            "format": "Valor total do abastecimento em reais.",
+            "example": 73.46
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          },
+          "tank": {
+            "$ref": "#/components/schemas/Tank"
+          },
+          "attendant": {
+            "$ref": "#/components/schemas/Attendant"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "ETotStart": {
+            "type": "number",
+            "format": "Encerrante inicial do Fuel Point (Posição de Abastecimento) no abastecimento.",
+            "example": 124.57
+          },
+          "ETotEnd": {
+            "type": "number",
+            "format": "Encerrante final do Fuel Point (Posição de Abastecimento) no abastecimento.",
+            "example": 453.63
+          }
+        }
+      },
+      "DeliveryCallback": {
+        "type": "object",
+        "properties": {
+          "station": {
+            "$ref": "#/components/schemas/Station"
+          },
+          "fuelPointId": {
+            "type": "string",
+            "format": "Código único de identificação do Fuel Point (Posição de Abastecimento).",
+            "example": "3"
+          },
+          "hoseId": {
+            "type": "integer",
+            "format": "Código único de identificação do bico.",
+            "example": 2
+          },
+          "deliveryId": {
+            "type": "string",
+            "format": "Identificador do abastecimento.",
+            "example": "456823"
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do início do abastecimento.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "volume": {
+            "type": "number",
+            "format": "Volume de combustível no tanque em litros na temperatura ambiente. (Informação p/ rotas de ECR -- Emissão nota fiscal) Devido a problemas de truncamento de informação derivado de limitações de hardware presentes nas bombas, nos casos em que  o volume multiplicado pelo preço unitário seja diferente do valor total abastecido em reais, é necessário recalcular o valor do volume do abastecimento, de forma que a multiplicação resultante seja igual ao total informado pela API, o volume recalculado deverá ser informado para o SAT em conjunto com as demais informações necessárias.",
+            "example": 35.95
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário usado pelo abastecimento.",
+            "example": 5.487
+          },
+          "total": {
+            "type": "number",
+            "format": "Valor total do abastecimento em reais.",
+            "example": 73.46
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          },
+          "attendant": {
+            "$ref": "#/components/schemas/Attendant"
+          }
+        }
+      },
+      "TankEventCallback": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "eventId": {
+            "type": "integer",
+            "format": "Código único do evento.",
+            "example": 1
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do lançamento/geração do evento no tanque.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "eventType": {
+            "type": "integer",
+            "description": "- tankLowProductWarningStartTalr = 100 - tankCalibrationErrorTalr = 124 - tankLowProductWarningEndTalr = 101 - tankLowProductAlarmStartTalr = 102 - tankLowProductAlarmEndTalr = 103 - tankHiProductWarningStartTalr = 104 - tankHiProductWarningEndTalr = 105 - tankHiProductAlarmStartTalr = 106 - tankHiProductAlarmEndTalr = 107 - tankHiWaterWarningStartTalr = 108 - tankHiWaterWarningEndTalr = 109 - tankHiWaterAlarmStartTalr = 110 - tankHiWaterAlarmEndTalr = 111 - tankProbeStoppedRespondingTalr = 112 - tankProbeStartedRespondingTalr = 113 - tankAtgStoppedRespondingTalr = 114 - tankAtgStartedRespondingTalr  = 115 - tankLeakStartTalr = 119 - tankLeakEndTalr = 120 - tankConfigTalr = 122 - tankStateTalr = 121 - tankDropEndTalr  = 117 ",
+            "format": "Tipo de evento retornado neste método. Eventos do tanque.",
+            "example": 1,
+            "enum": [
+              100,
+              124,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              108,
+              109,
+              110,
+              111,
+              112,
+              113,
+              114,
+              115,
+              119,
+              120,
+              122,
+              121,
+              117
+            ]
+          },
+          "tank": {
+            "$ref": "#/components/schemas/TankDelivery"
+          }
+        }
+      },
+      "SensorEventCallback": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "eventId": {
+            "type": "integer",
+            "format": "Código único do evento.",
+            "example": 1
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do lançamento/geração do evento no sensor.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "name": {
+            "type": "string",
+            "format": "Nome do sensor.",
+            "example": "Pump 1 sensor"
+          },
+          "type": {
+            "type": "integer",
+            "description": "- sensorOnTalr = 300  - sensorOffTalr  = 301 - sensorNotRespondingTalr = 302",
+            "format": "Tipo de evento retornado neste método. Eventos do sensor.",
+            "example": 1,
+            "enum": [
+              300,
+              301,
+              302
+            ]
+          }
+        }
+      },
+      "TankDeliveryCallback": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "tankDeliveryId": {
+            "type": "integer",
+            "format": "Código único de entregas de tanque.",
+            "example": 1
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do lançamento/geração da entrega no tanque.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "tank": {
+            "$ref": "#/components/schemas/TankDelivery"
+          }
+        }
+      },
+      "TankEventWithStationCallback": {
+        "type": "object",
+        "properties": {
+          "station": {
+            "$ref": "#/components/schemas/Station"
+          },
+          "eventId": {
+            "type": "integer",
+            "format": "Código único do evento.",
+            "example": 1
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do lançamento/geração do evento no tanque.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "eventType": {
+            "type": "integer",
+            "description": "- tankLowProductWarningStartTalr = 100 - tankCalibrationErrorTalr = 124 - tankLowProductWarningEndTalr = 101 - tankLowProductAlarmStartTalr = 102 - tankLowProductAlarmEndTalr = 103 - tankHiProductWarningStartTalr = 104 - tankHiProductWarningEndTalr = 105 - tankHiProductAlarmStartTalr = 106 - tankHiProductAlarmEndTalr = 107 - tankHiWaterWarningStartTalr = 108 - tankHiWaterWarningEndTalr = 109 - tankHiWaterAlarmStartTalr = 110 - tankHiWaterAlarmEndTalr = 111 - tankProbeStoppedRespondingTalr = 112 - tankProbeStartedRespondingTalr = 113 - tankAtgStoppedRespondingTalr = 114 - tankAtgStartedRespondingTalr  = 115 - tankLeakStartTalr = 119 - tankLeakEndTalr = 120 - tankConfigTalr = 122 - tankStateTalr = 121 - tankDropEndTalr  = 117 ",
+            "format": "Tipo de evento que será retornado neste método. Eventos do tanque.",
+            "example": 1,
+            "enum": [
+              100,
+              124,
+              101,
+              102,
+              103,
+              104,
+              105,
+              106,
+              107,
+              108,
+              109,
+              110,
+              111,
+              112,
+              113,
+              114,
+              115,
+              119,
+              120,
+              122,
+              121,
+              117
+            ]
+          },
+          "tank": {
+            "$ref": "#/components/schemas/Tank"
+          }
+        }
+      },
+      "TagReaderCallback": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação da posição de abastecimento.",
+            "example": 3
+          },
+          "tagType": {
+            "type": "integer",
+            "description": "- SemParar = 0 - MoveMais = 1 - ConectCar = 2",
+            "format": "Tipo de tag.",
+            "example": 1,
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "tagId": {
+            "type": "string",
+            "format": "Identificação da tag.",
+            "example": "123456789ABDEF"
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do lançamento/geração do evento.",
+            "example": "2020-12-10T22:00:00"
+          }
+        }
+      },
+      "CardReaderCallback": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação da posição de abastecimento.",
+            "example": 3
+          },
+          "cardType": {
+            "type": "integer",
+            "description": "- Attendant = 1 - Bank = 2 - Customer = 3          ",
+            "format": "Tipo de cartão.",
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          "cardId": {
+            "type": "string",
+            "format": "Identificação do cartão.",
+            "example": "123456789ABDEF"
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do lançamento/geração do evento.",
+            "example": "2020-12-10T22:00:00"
+          }
+        }
+      },
+      "FuelPoint": {
+        "type": "object",
+        "properties": {
+          "preset": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) aceita limite? Sim ou não (true | false)",
+            "example": true
+          },
+          "block": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) permite a paralização do abastecimento? Sim ou não (true | false)",
+            "example": true
+          },
+          "configPrice": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) permite alteração de preço? Sim ou não (true | false)",
+            "example": true
+          },
+          "card": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui um leitor MIFARE (Leitor de Cartão)? Sim ou não (true | false)",
+            "example": true
+          },
+          "tag": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui uma antena UHF para leitura de etiqueta? Sim ou não (true | false)",
+            "example": true
+          },
+          "term": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui um terminal associado para inserir informações adicionais? Sim ou não (true | false)",
+            "example": true
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do Fuel Point (Posição de Abastecimento).",
+            "example": 3
+          },
+          "Hoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Hose"
+            }
+          }
+        }
+      },
+      "FuelPointForencourtMap": {
+        "type": "object",
+        "properties": {
+          "preset": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) aceita limite? Sim ou não (true | false)",
+            "example": true
+          },
+          "block": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) permite a paralização do abastecimento? Sim ou não (true | false)",
+            "example": true
+          },
+          "configPrice": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) permite alteração de preço? Sim ou não (true | false)",
+            "example": true
+          },
+          "card": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui um leitor MIFARE (Leitor de Cartão)? Sim ou não (true | false)",
+            "example": true
+          },
+          "tag": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui uma antena UHF para leitura de etiqueta? Sim ou não (true | false)",
+            "example": true
+          },
+          "term": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui um terminal associado para inserir informações adicionais? Sim ou não (true | false)",
+            "example": true
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do Fuel Point (Posição de Abastecimento).",
+            "example": 3
+          },
+          "Hoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HoseForencourtMap"
+            }
+          }
+        }
+      },
+      "FuelPointForReserve": {
+        "type": "object",
+        "properties": {
+          "preset": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) aceita limite? Sim ou não (true | false)",
+            "example": true
+          },
+          "block": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) permite a paralização do abastecimento? Sim ou não (true | false)",
+            "example": true
+          },
+          "configPrice": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) permite alteração de preço? Sim ou não (true | false)",
+            "example": true
+          },
+          "card": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui um leitor MIFARE (Leitor de Cartão)? Sim ou não (true | false)",
+            "example": true
+          },
+          "tag": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui uma antena UHF para leitura de etiqueta? Sim ou não (true | false)",
+            "example": true
+          },
+          "term": {
+            "type": "boolean",
+            "format": "O Fuel Point (Posição de Abastecimento) possui um terminal associado para inserir informações adicionais? Sim ou não (true | false)",
+            "example": true
+          },
+          "Hoses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HoseForReserve"
+            }
+          }
+        }
+      },
+      "Hose": {
+        "type": "object",
+        "properties": {
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Posição do Hose (Mangueira/Bico) no Fuel Point (Posição de Abastecimento).",
+            "example": 1
+          },
+          "price": {
+            "type": "number",
+            "format": "Preço do combustivel no Hose (Mangueira/Bico)."
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          }
+        }
+      },
+      "HoseForReserve": {
+        "type": "object",
+        "properties": {
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Posição do Hose (Mangueira/Bico) no Fuel Point (Posição de Abastecimento).",
+            "example": 1
+          },
+          "price": {
+            "type": "number",
+            "format": "Preço do combustivel no Hose (Mangueira/Bico)."
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/FuelForReserve"
+          }
+        }
+      },
+      "HoseForencourtMap": {
+        "type": "object",
+        "properties": {
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Posição do Hose (Mangueira/Bico) no Fuel Point (Posição de Abastecimento).",
+            "example": 1
+          },
+          "price": {
+            "type": "number",
+            "format": "Preço do combustivel no Hose (Mangueira/Bico)."
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/FuelForencourtMap"
+          }
+        }
+      },
+      "Fuel": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "format": "Nome do combustível.",
+            "example": "Álcool comum"
+          },
+          "fuelType": {
+            "type": "integer",
+            "description": "- outra = 0 - etanol = 1 - etanolAditivada = 2 - etanolPremium = 3 - etanolPremiumAditivada = 4 - gasolina = 5 - gasolinaAditivada = 6 - gasolinaPremium = 7 - gasolinaPremiumAditivada = 8 - dieselS10 = 9 - dieselS50 = 10 - dieselS500 = 11 - dieselS1200 = 12 - dieselMaritimo = 13 - querosene = 14 - gnv = 15 - arla = 16",
+            "format": "Tipo de combustivel baseado no código do enum.",
+            "example": 1,
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          }
+        }
+      },
+      "FuelForencourtMap": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "format": "Nome do combustível.",
+            "example": "Álcool comum"
+          },
+          "fuelType": {
+            "type": "string",
+            "description": "- outra = 0 - etanol = 1 - etanolAditivada = 2 - etanolPremium = 3  - etanolPremiumAditivada = 4   - gasolina = 5   - gasolinaAditivada = 6   - gasolinaPremium = 7   - gasolinaPremiumAditivada = 8   - dieselS10 = 9   - dieselS50 = 10   - dieselS500 = 11   - dieselS1200 = 12   - dieselMaritimo = 13   - querosene = 14   - gnv = 15   - arla = 16 ",
+            "format": "Tipo de combustivel baseado no código do enum.",
+            "example": "1",
+            "enum": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16"
+            ]
+          },
+          "fuelTypeDescription": {
+            "type": "string",
+            "example": "alcoolComum"
+          },
+          "imagePath": {
+            "type": "string",
+            "format": "Url do banner do combustivel.",
+            "example": "https://conecttec.com.br/Images/example.png"
+          }
+        }
+      },
+      "FuelForReserve": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "format": "Nome do combustível.",
+            "example": "Gasolina"
+          },
+          "imagePath": {
+            "type": "string",
+            "format": "Url do banner do combustivel.",
+            "example": "https://conecttec.com.br/Images/example.png"
+          },
+          "fuelType": {
+            "type": "integer",
+            "description": "- outra = 0 - etanol = 1 - etanolAditivada = 2 - etanolPremium = 3 - etanolPremiumAditivada = 4 - gasolina = 5 - gasolinaAditivada = 6 - gasolinaPremium = 7 - gasolinaPremiumAditivada = 8 - dieselS10 = 9 - dieselS50 = 10 - dieselS500 = 11 - dieselS1200 = 12 - dieselMaritimo = 13 - querosene = 14 - gnv = 15 - arla = 16",
+            "format": "Tipo de combustivel baseado no código do enum.",
+            "example": 1,
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ]
+          }
+        }
+      },
+      "TankDelivery": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Número do tanque de combustível",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "format": "Nome do tanque de combustível",
+            "example": "TQ 01 - GC"
+          },
+          "volume": {
+            "type": "number",
+            "format": "Volume de combustível no tanque em litros na temperatura ambiente. (Informação p/ rotas de ECR -- Emissão nota fiscal) Devido a problemas de truncamento de informação derivado de limitações de hardware presentes nas bombas, nos casos em que  o volume multiplicado pelo preço unitário seja diferente do valor total abastecido em reais, é necessário recalcular o valor do volume do abastecimento, de forma que a multiplicação resultante seja igual ao total informado pela API, o volume recalculado deverá ser informado para o SAT em conjunto com as demais informações necessárias.",
+            "example": 2000
+          },
+          "tcVolume": {
+            "type": "number",
+            "format": "Volume de combustível no tanque em litros com correção de temperatura a 20 ºC.",
+            "example": 2010
+          },
+          "ullage": {
+            "type": "number",
+            "format": "Espaço disponível no tanque em litros na temperatura ambiente.",
+            "example": 2800
+          },
+          "temperature": {
+            "type": "number",
+            "format": "Temperatura do combustível.",
+            "example": 26.8
+          },
+          "waterLevel": {
+            "type": "number",
+            "format": "Nível de água no tanque.",
+            "example": 0.065
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          }
+        }
+      },
+      "Tank": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Número do tanque de combustível",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "format": "Nome do tanque de combustível",
+            "example": "TQ 01 - GC"
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          }
+        }
+      },
+      "TankForencourtMap": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Número do tanque de combustível",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "format": "Nome do tanque de combustível",
+            "example": "TQ 01 - GC"
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/FuelForencourtMap"
+          }
+        }
+      },
+      "Attendant": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "format": "Tag/Código do cartão do atendente (Frentista).",
+            "example": "123456AB"
+          },
+          "name": {
+            "type": "string",
+            "format": "Nome do atendente (Frentista).",
+            "example": "Bob"
+          },
+          "id": {
+            "type": "integer",
+            "format": "Id do atendente (Frentista).",
+            "example": 1
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "format": "Identificação do cartão do cliente.",
+            "example": "654321AB"
+          },
+          "name": {
+            "type": "string",
+            "format": "Nome do cliente.",
+            "example": "Bruce"
+          },
+          "id": {
+            "type": "integer",
+            "format": "Identificação do cliente.",
+            "example": 1
+          },
+          "odometer": {
+            "type": "integer",
+            "format": "Odometro do veículo do cliente.",
+            "example": 123456
+          }
+        }
+      },
+      "Station": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Identificação do posto de gasolina.",
+            "example": 132
+          },
+          "stationCnpj": {
+            "type": "string",
+            "format": "Cnpj do posto de gasolina.",
+            "example": "50143914000180"
+          },
+          "stationName": {
+            "type": "string",
+            "format": "Nome do posto de gasolina.",
+            "example": "Posto Ipiranga"
+          }
+        }
+      },
+      "StationCPC": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "format": "Nome do posto de gasolina.",
+            "example": "Posto Belford Roxo"
+          },
+          "shortName": {
+            "type": "string",
+            "format": "Nome abreviado do posto de gasolina.",
+            "example": "PBR"
+          },
+          "street": {
+            "type": "string",
+            "format": "Rua  em que se encontra o posto de gasolina.",
+            "example": "Estrada dom josé melhado campos"
+          },
+          "number": {
+            "type": "integer",
+            "format": "Número em que se encontra o posto de gasolina.",
+            "example": 32
+          },
+          "city": {
+            "type": "string",
+            "format": "Cidade em que se encontra o posto de gasolina.",
+            "example": "São Paulo"
+          },
+          "state": {
+            "type": "string",
+            "format": "Estado em que se encontra o posto de gasolina.",
+            "example": "SP"
+          },
+          "postalCode": {
+            "type": "string",
+            "format": "Cep em que se encontra o posto de gasolina.",
+            "example": "20010-974"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "Latitude em que se encontra o posto de gasolina.",
+            "example": 40.7143528
+          },
+          "longitude": {
+            "type": "number",
+            "format": "Longitude em que se encontra o posto de gasolina.",
+            "example": -74.0059731
+          },
+          "brand": {
+            "type": "string",
+            "format": "Bandeira do posto.",
+            "example": "Shell"
+          },
+          "fuelpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FuelPointForencourtMap"
+            }
+          }
+        }
+      },
+      "Delivery": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do Fuel Point (Posição de Abastecimento).",
+            "example": 3
+          },
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do bico.",
+            "example": 2
+          },
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização, enviado na resposta do Delivery/Authorize no campo authId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "deliveryId": {
+            "type": "integer",
+            "format": "Identificador do abastecimento.",
+            "example": 456823
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do início do abastecimento.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "volume": {
+            "type": "number",
+            "format": "Volume de combustível no tanque em litros na temperatura ambiente. (Informação p/ rotas de ECR -- Emissão nota fiscal) Devido a problemas de truncamento de informação derivado de limitações de hardware presentes nas bombas, nos casos em que  o volume multiplicado pelo preço unitário seja diferente do valor total abastecido em reais, é necessário recalcular o valor do volume do abastecimento, de forma que a multiplicação resultante seja igual ao total informado pela API, o volume recalculado deverá ser informado para o SAT em conjunto com as demais informações necessárias.",
+            "example": 35.95
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário que foi usado pelo abastecimento.",
+            "example": 5.487
+          },
+          "total": {
+            "type": "number",
+            "format": "Valor total do abastecimento em reais.",
+            "example": 73.46
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          },
+          "tank": {
+            "$ref": "#/components/schemas/Tank"
+          },
+          "attendant": {
+            "$ref": "#/components/schemas/Attendant"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "ETotStart": {
+            "type": "number",
+            "format": "Encerrante inicial do Fuel Point (Posição de Abastecimento) no abastecimento.",
+            "example": 124.57
+          },
+          "ETotEnd": {
+            "type": "number",
+            "format": "Encerrante final do Fuel Point (Posição de Abastecimento) no abastecimento.",
+            "example": 453.63
+          }
+        }
+      },
+      "DeliveryReconciliation": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do Fuel Point (Posição de Abastecimento).",
+            "example": 3
+          },
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do bico.",
+            "example": 2
+          },
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização, enviado na resposta do Delivery/Authorize no campo authId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "deliveryId": {
+            "type": "integer",
+            "format": "Identificador do abastecimento.",
+            "example": 456823
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do início do abastecimento.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "volume": {
+            "type": "number",
+            "format": "Volume de combustível no tanque em litros na temperatura ambiente. (Informação p/ rotas de ECR -- Emissão nota fiscal) Devido a problemas de truncamento de informação derivado de limitações de hardware presentes nas bombas, nos casos em que  o volume multiplicado pelo preço unitário seja diferente do valor total abastecido em reais, é necessário recalcular o valor do volume do abastecimento, de forma que a multiplicação resultante seja igual ao total informado pela API, o volume recalculado deverá ser informado para o SAT em conjunto com as demais informações necessárias.",
+            "example": 35.95
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário que foi usado pelo abastecimento.",
+            "example": 5.487
+          },
+          "total": {
+            "type": "number",
+            "format": "Valor total do abastecimento em reais.",
+            "example": 73.46
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          },
+          "operationalDate": {
+            "type": "string",
+            "format": "DateTime",
+            "example": "2020-12-10T22:00:00"
+          },
+          "customerIdentification": {
+            "type": "string",
+            "format": "Cpf ou Cnpj do cliente que realizou o abastecimento(Campo não obrigatório)",
+            "example": "16531585064"
+          },
+          "providerName": {
+            "type": "string",
+            "format": "Nome do provider que realizou a sinalização do pagamento",
+            "example": "ProviderExemplo"
+          },
+          "EtotStart": {
+            "type": "number",
+            "format": "Encerrante ao iniciar um abastecimento.",
+            "example": 6232.95
+          },
+          "EtotEnd": {
+            "type": "number",
+            "format": "Encerrante ao finalizar um abastecimento.",
+            "example": 6290.25
+          }
+        }
+      },
+      "PaymentReconciliation": {
+        "type": "object",
+        "properties": {
+          "stationId": {
+            "type": "integer",
+            "format": "Código único de identificação do posto.",
+            "example": 132
+          },
+          "fuelPointNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do Fuel Point (Posição de Abastecimento).",
+            "example": 3
+          },
+          "hoseNumber": {
+            "type": "integer",
+            "format": "Código único de identificação do bico.",
+            "example": 2
+          },
+          "authId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da autorização, enviado na resposta do Delivery/Authorize no campo authId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "reserveId": {
+            "type": "string",
+            "format": "Hash/Código único de identificação da reserva, enviado na resposta da Delivery/Reserve no campo reserveId.",
+            "example": "d4102a4e8e404bcd9adec574952d03cf"
+          },
+          "deliveryId": {
+            "type": "integer",
+            "format": "Identificador do abastecimento.",
+            "example": 456823
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "Data e hora do início do abastecimento.",
+            "example": "2020-12-10T22:00:00"
+          },
+          "volume": {
+            "type": "number",
+            "format": "Volume de combustível no tanque em litros na temperatura ambiente. (Informação p/ rotas de ECR -- Emissão nota fiscal) Devido a problemas de truncamento de informação derivado de limitações de hardware presentes nas bombas, nos casos em que  o volume multiplicado pelo preço unitário seja diferente do valor total abastecido em reais, é necessário recalcular o valor do volume do abastecimento, de forma que a multiplicação resultante seja igual ao total informado pela API, o volume recalculado deverá ser informado para o SAT em conjunto com as demais informações necessárias.",
+            "example": 35.95
+          },
+          "price": {
+            "minimum": 1,
+            "type": "number",
+            "format": "Preço unitário que foi usado pelo abastecimento.",
+            "example": 5.487
+          },
+          "total": {
+            "type": "number",
+            "format": "Valor total do abastecimento em reais.",
+            "example": 73.46
+          },
+          "fuel": {
+            "$ref": "#/components/schemas/Fuel"
+          },
+          "customerIdentification": {
+            "type": "string",
+            "format": "Cpf ou Cnpj do cliente que realizou o abastecimento(Campo não obrigatório)",
+            "example": "16531585064"
+          },
+          "providerName": {
+            "type": "string",
+            "format": "Nome do provider que realizou a sinalização do pagamento",
+            "example": "ProviderExemplo"
+          },
+          "operationalDate": {
+            "type": "string",
+            "format": "DateTime",
+            "example": "2020-12-10 22:00:00"
+          },
+          "transactionStatus": {
+            "type": "integer",
+            "description": "- captured = 0 - paid = 1                 - scheduled = 2  - contested = 3  - anticipated = 4 ",
+            "example": 0,
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "EtotStart": {
+            "type": "number",
+            "format": "Encerrante ao iniciar um abastecimento.",
+            "example": 6232.95
+          },
+          "EtotEnd": {
+            "type": "number",
+            "format": "Encerrante ao finalizar um abastecimento.",
+            "example": 6290.25
+          }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "logradouro": {
+            "type": "string",
+            "format": "Lagradouro do endereço de emissão da NFE (80 caracteres máx.)"
+          },
+          "numero": {
+            "type": "string",
+            "format": "Número do endereço de emissão da NFE, quando sem número exibe “S/N”  (6 caracteres máx.)"
+          },
+          "complemento": {
+            "type": "string",
+            "format": "Complemento do endereço de emissão da NFE (20 caracteres máx.)"
+          },
+          "bairro": {
+            "type": "string",
+            "format": "Nome do bairro do endereço de emissão da NFE  (60 caracteres máx.) "
+          },
+          "cidade": {
+            "type": "string",
+            "format": "Nome da cidade do endereço de emissão da NFE (50 caracteres máx.)        "
+          },
+          "uf": {
+            "type": "string",
+            "format": "Sigla da UF do endereço de emissão da NFE  (2 caracteres)"
+          },
+          "cep": {
+            "type": "string",
+            "format": "Cep (somente números) do endereço de emissão da NFE  (8 caracteres)"
+          },
+          "codigoIbge": {
+            "type": "integer",
+            "format": "Código da cidade conforme base do IBGE  (int64)"
+          }
+        }
+      },
+      "File": {
+        "type": "object",
+        "properties": {
+          "originalName": {
+            "type": "string",
+            "format": "Nome original do arquivo que está sendo enviado na chamada, incluindo a extensão. (.xml). (60 caracteres máx.)"
+          },
+          "base64Encode": {
+            "type": "string",
+            "format": "Conteúdo do arquivo XML da nota fiscal com codificação base64/ISO 8859-1. (1000000 caracteres máx.)"
+          },
+          "md5Hash": {
+            "type": "string",
+            "format": "Valor codificado hash MD5 do arquivo XML enviado no campo base64Encode (32 caracteres máx.). O md5Hash precisa considerar o conteúdo do XML ainda em buffer, antecendo a conversão do mesmo em base64/ISO 8859-1."
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "SecretKeyAuthorization": {
+        "type": "http",
+        "description": "SecretKey será enviado pelo contato comercial ConectTec. Deverá ser passado no header(SecretKeyAuthorization) pelo provider nas rotas dessa API; ",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "EcrKeyAuthorization": {
+        "type": "http",
+        "description": "SecretKey será enviado pelo contato comercial ConectTec. Deverá ser passado no header(EcrKeyAuthorization) pelo sistema de gestão nas rotas dessa API;",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "EcrStationKeyAuthorization": {
+        "type": "http",
+        "description": "SecretKey será enviado pelo contato comercial ConectTec. Deverá ser passado no header(EcrStationKeyAuthorization) pelo sistema de gestão nas rotas dessa API;",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
